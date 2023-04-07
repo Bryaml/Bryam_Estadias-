@@ -1,4 +1,6 @@
 package com.example.examen.request;
+import com.example.examen.Entity.EstadoIncidencia;
+
 import java.lang.Long;
 
 public class IncidenciaRequest {
@@ -11,6 +13,18 @@ public class IncidenciaRequest {
     private String nombreAula;
     private String nombreLaboratorio;
     private Long areaId;
+    // Agrega el campo espacioId
+    private Long espacioId;
+    // Otros campos existentes
+
+    // Getter y setter para espacioId
+    public Long getEspacioId() {
+        return espacioId;
+    }
+
+    public void setEspacioId(Long espacioId) {
+        this.espacioId = espacioId;
+    }
 
     public String getNombreAula() {
         return nombreAula;
@@ -19,7 +33,7 @@ public class IncidenciaRequest {
     public String getNombreLaboratorio() {
         return nombreLaboratorio;
     }
-
+    private EstadoIncidencia estado;
     private Long aulaId;
 
     public IncidenciaRequest() {
@@ -35,6 +49,13 @@ public class IncidenciaRequest {
         this.nombreLaboratorio = nombreLaboratorio;
         this.areaId = areaId;
         this.aulaId = aulaId;
+    }
+    public EstadoIncidencia getEstado() {
+        return estado;
+    }
+
+    public void setEstado(EstadoIncidencia estado) {
+        this.estado = estado;
     }
 
     public Long getAulaId() {

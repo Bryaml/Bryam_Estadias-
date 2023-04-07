@@ -14,9 +14,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/incidencias")
@@ -53,6 +52,7 @@ public class IncidenciaController {
     @Autowired
     private SimpMessagingTemplate template;
 
+
     @PostMapping("/crear-incidencia")
     public ResponseEntity<Incidencia> crearIncidencia(@RequestBody IncidenciaRequest incidenciaRequest) {
 
@@ -66,51 +66,31 @@ public class IncidenciaController {
                     .orElseThrow(() -> new ResourceNotFoundException("Area no encontrada"));
 
             // Verificar si el aula pertenece al área seleccionada
-            Optional<Aula> aulaOptional = aulaRepository.findByNombreAndAreaId(incidenciaRequest.getNombreAula(), incidenciaRequest.getAreaId());
+            Optional<Aula> aulaOptional = aulaRepository.findByNombre(incidenciaRequest.getNombreAula());
+            Optional<Laboratorio> laboratorioOptional = laboratorioRepository.findByNombre(incidenciaRequest.getNombreLaboratorio());
+            // Crear la incidencia
+            Incidencia incidencia = new Incidencia();
+            incidencia.setDescripcion(incidenciaRequest.getDescripcion());
+            incidencia.setEstado(EstadoIncidencia.PENDIENTE);
+            incidencia.setFechaCreacion(LocalDateTime.now());
+            incidencia.setDocente(docente);
 
-            // Verificar si el laboratorio pertenece al área seleccionada
-            Optional<Laboratorio> laboratorioOptional = laboratorioRepository.findByNombreAndAreaId(incidenciaRequest.getNombreLaboratorio(), incidenciaRequest.getAreaId());
-
-            // Verificar si se encontró el aula o el laboratorio
-            if (aulaOptional.isPresent() && laboratorioOptional.isPresent()) {
-                throw new IllegalArgumentException("No se puede registrar incidencia en ambos aula y laboratorio al mismo tiempo");
-            } else if (aulaOptional.isPresent()) {
-                // Crear la incidencia con el aula
-                System.out.println("Aula encontrada: " + aulaOptional.get().getNombre());
-                Incidencia incidencia = new Incidencia();
-                incidencia.setDescripcion(incidenciaRequest.getDescripcion());
-                incidencia.setEstado(EstadoIncidencia.PENDIENTE);
-                incidencia.setFechaCreacion(LocalDateTime.now());
-                incidencia.setDocente(docente);
+            // Verificar si se encontró el aula
+            if (aulaOptional.isPresent()) {
                 incidencia.setAula(aulaOptional.get());
-                incidenciaRepository.save(incidencia);
-                template.convertAndSend("/topic/notificaciones", "Se ha registrado una nueva incidencia");
-                return ResponseEntity.ok(incidencia);
             } else if (laboratorioOptional.isPresent()) {
-                // Crear la incidencia con el laboratorio
-                System.out.println("Laboratorio encontrado: " + laboratorioOptional.get().getNombre());
-                Incidencia incidencia = new Incidencia();
-                incidencia.setDescripcion(incidenciaRequest.getDescripcion());
-                incidencia.setEstado(EstadoIncidencia.PENDIENTE);
-                incidencia.setFechaCreacion(LocalDateTime.now());
-                incidencia.setDocente(docente);
                 incidencia.setLaboratorio(laboratorioOptional.get());
-                incidenciaRepository.save(incidencia);
-                template.convertAndSend("/topic/notificaciones", "Se ha registrado una nueva incidencia");
-                return ResponseEntity.ok(incidencia);
             } else {
                 throw new ResourceNotFoundException("Aula o laboratorio no encontrado");
             }
+
+            incidenciaRepository.save(incidencia);
+            template.convertAndSend("/topic/notificaciones", "Se ha registrado una nueva incidencia");
+            return ResponseEntity.ok(incidencia);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Error al crear incidencia");
+            throw new RuntimeException("Error al crear incidencia: " + e.getMessage(), e);
         }
-
-        // Enviar notificación a través del WebSocket
-       // template.convertAndSend("/topic/incidencias", "Nueva incidencia creada");
-
-     //   return ResponseEntity.ok(incidencia);
-// Enviar notificación a través de WebSocket
 
 
     }
@@ -134,15 +114,22 @@ public class IncidenciaController {
             // Asignar el técnico a la incidencia
             incidencia.setTecnico(tecnico);
             incidencia.setEstado(EstadoIncidencia.ACTIVA);
-            incidencia.setFechaActiva(LocalDateTime.now()); // <-- Agregar fecha
+            incidencia.setFechaActiva(LocalDateTime.now());
             incidenciaRepository.save(incidencia);
 
+            // Enviar notificación al docente
+            // Enviar notificación al docente
+            System.out.println("Enviando notificación al docente: " + incidencia.getDocente().getEmail()); // Agrega este registro
+            template.convertAndSendToUser(incidencia.getDocente().getEmail(), "/topic/notifications", "Un técnico ha sido asignado a tu incidencia");
+            System.out.println("Notificación enviada al docente: " + incidencia.getDocente().getEmail());
             return ResponseEntity.ok(incidencia);
         } catch (Exception e) {
             e.printStackTrace();
+            System.out.println("Error al enviar notificación al docente: " );
             throw new RuntimeException("Error al asignar técnico a incidencia");
         }
     }
+
 
     @PutMapping("/{id}/resolver")
     public ResponseEntity<Incidencia> resolverIncidencia(@PathVariable Long id) {
@@ -167,6 +154,134 @@ public class IncidenciaController {
             throw new RuntimeException("Error al resolver incidencia");
         }
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Incidencia> actualizarIncidencia(@PathVariable Long id, @RequestBody IncidenciaRequest incidenciaRequest) {
+        try {
+            // Obtener la incidencia por ID
+            Incidencia incidencia = incidenciaRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("No se encontró la incidencia con ID " + id));
+
+            // Actualizar el estado de la incidencia si es necesario
+            if (incidenciaRequest.getEstado() != null) {
+                incidencia.setEstado(incidenciaRequest.getEstado());
+            }
+
+
+
+            // Guardar la incidencia actualizada
+            incidenciaRepository.save(incidencia);
+            return ResponseEntity.ok(incidencia);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error al actualizar la incidencia");
+        }
+    }
+
+    @GetMapping("/docente/{docenteId}/tecnicos")
+    public ResponseEntity<List<Tecnico>> getTecnicosWithActiveIncidencia(@PathVariable Long docenteId) {
+        Docente docente = docenteRepository.findById(docenteId)
+                .orElseThrow(() -> new ResourceNotFoundException("Docente no encontrado"));
+
+        List<Tecnico> tecnicos = incidenciaRepository.findDistinctTecnicosByDocenteIdAndEstado(docenteId, EstadoIncidencia.ACTIVA);
+
+        return ResponseEntity.ok(tecnicos);
+    }
+
+
+    @GetMapping
+    public ResponseEntity<List<Incidencia>> getAllIncidencias(
+            @RequestParam(required = false) EstadoIncidencia estado,
+            @RequestParam(required = false) String emailTecnico
+    ) {
+        List<Incidencia> incidencias;
+
+        if (estado != null && emailTecnico != null) {
+            // Filtrar por estado y técnico asignado
+            incidencias = incidenciaRepository.findAllByEstadoAndTecnicoEmail(estado, emailTecnico);
+        } else if (estado != null) {
+            // Filtrar solo por estado
+            incidencias = incidenciaRepository.findAllByEstado(estado);
+        } else {
+            // Si no se proporcionan filtros, devuelve todas las incidencias
+            incidencias = incidenciaRepository.findAll();
+        }
+
+        return ResponseEntity.ok(incidencias);
+    }
+    @GetMapping("/docente")
+    public ResponseEntity<List<Incidencia>> getIncidenciasDocente(
+            @RequestParam(required = true) String emailDocente
+    ) {
+        List<Incidencia> incidencias = incidenciaRepository.findAllByDocenteEmail(emailDocente);
+
+        return ResponseEntity.ok(incidencias);
+    }
+
+    // Método para obtener todas las incidencias para el administrador
+    @GetMapping("/admin")
+    public ResponseEntity<List<Incidencia>> getAllIncidenciasAdmin(
+            @RequestParam(required = false) EstadoIncidencia estado,
+            @RequestParam(required = false) String emailTecnico
+    ) {
+        List<Incidencia> incidencias;
+
+        if (estado != null && emailTecnico != null) {
+            // Filtrar por estado y técnico asignado
+            incidencias = incidenciaRepository.findAllByEstadoAndTecnicoEmail(estado, emailTecnico);
+        } else if (estado != null) {
+            // Filtrar solo por estado
+            incidencias = incidenciaRepository.findAllByEstado(estado);
+        } else {
+            // Si no se proporcionan filtros, devuelve todas las incidencias
+            incidencias = incidenciaRepository.findAll();
+        }
+
+        return ResponseEntity.ok(incidencias);
+    }
+
+
+
+    @GetMapping("/incidencias-por-area")
+    public ResponseEntity<Map<String, Long>> obtenerIncidenciasPorArea() {
+        List<Area> areas = areaRepository.findAll();
+        Map<String, Long> incidenciasPorArea = new HashMap<>();
+
+        for (Area area : areas) {
+            long numIncidencias = incidenciaRepository.countByAulaArea(area);
+            incidenciasPorArea.put(area.getNombre(), numIncidencias);
+        }
+
+        return ResponseEntity.ok(incidenciasPorArea);
+    }
+
+
+    @GetMapping("/incidencias-por-docente")
+    public ResponseEntity<Map<String, Long>> obtenerIncidenciasPorDocente() {
+        List<Docente> docentes = docenteRepository.findAll();
+        Map<String, Long> incidenciasPorDocente = new HashMap<>();
+
+        for (Docente docente : docentes) {
+            long numIncidencias = incidenciaRepository.countByDocente(docente);
+            incidenciasPorDocente.put(docente.getNombres(), numIncidencias);
+        }
+
+        return ResponseEntity.ok(incidenciasPorDocente);
+    }
+
+    @GetMapping("/incidencias-por-division-academica")
+    public ResponseEntity<Map<String, Long>> obtenerIncidenciasPorDivisionAcademica() {
+        List<String> divisionesAcademicas = docenteRepository.findDistinctDivisionesAcademicas();
+        Map<String, Long> incidenciasPorDivision = new HashMap<>();
+
+        for (String division : divisionesAcademicas) {
+            long numIncidencias = incidenciaRepository.countByDocenteDivisionAcademica(division);
+            incidenciasPorDivision.put(division, numIncidencias);
+        }
+
+        return ResponseEntity.ok(incidenciasPorDivision);
+    }
+
 
 
 }

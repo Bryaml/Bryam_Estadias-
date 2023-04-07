@@ -6,7 +6,9 @@ import com.example.examen.Entity.Laboratorio;
 import com.example.examen.Repository.AreaRepository;
 import com.example.examen.Repository.AulaRepository;
 import com.example.examen.Repository.LaboratorioRepository;
+import com.example.examen.dto.AreaDTO;
 import com.example.examen.service.AreaService;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,14 +16,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.CascadeType;
+import javax.persistence.FetchType;
+import javax.persistence.OneToMany;
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/areas")
 public class AreaController {
 
-    @Autowired
-    private AreaService areaService;
+
     @Autowired
     private AreaRepository areaRepository;
     @Autowired
@@ -29,52 +35,21 @@ public class AreaController {
     @Autowired
     private LaboratorioRepository laboratorioRepository;
 
-
-    public static class RegistroAreaRequest {
-        private Area area;
-        private List<Aula> aulas;
-        private List<Laboratorio> laboratorios;
-
-        public Area getArea() {
-            return area;
-        }
-
-        public void setArea(Area area) {
-            this.area = area;
-        }
-
-        public List<Aula> getAulas() {
-            return aulas;
-        }
-
-        public void setAulas(List<Aula> aulas) {
-            this.aulas = aulas;
-        }
-
-        public List<Laboratorio> getLaboratorios() {
-            return laboratorios;
-        }
-
-        public void setLaboratorios(List<Laboratorio> laboratorios) {
-            this.laboratorios = laboratorios;
-        }
-    }
     @PostMapping("/registro")
     @Transactional
-    public void registrarAreaConAulasYLaboratorios(@RequestBody RegistroAreaRequest request) {
-        Area area = request.getArea();
-        List<Aula> aulas = request.getAulas();
-        List<Laboratorio> laboratorios = request.getLaboratorios();
-        if (area == null) {
-            area = new Area(); // Crear un nuevo objeto Area si es nulo
-        }
+    public void registrarAreaConAulasYLaboratorios(@RequestBody Area area) {
+        List<Aula> aulas = area.getAulas();
+        List<Laboratorio> laboratorios = area.getLaboratorios();
+
         areaRepository.save(area);
+
         if (aulas != null) {
             for (Aula aula : aulas) {
                 aula.setArea(area); // Asignar el objeto Area a cada aula
             }
             aulaRepository.saveAll(aulas);
         }
+
         if (laboratorios != null) {
             for (Laboratorio lab : laboratorios) {
                 lab.setArea(area); // Asignar el objeto Area a cada laboratorio
@@ -83,6 +58,18 @@ public class AreaController {
         }
     }
 
+    public static AreaDTO toDTO(Area area) {
+        AreaDTO dto = new AreaDTO();
+        dto.setId(area.getId());
+        dto.setNombre(area.getNombre());
+        // ...otros campos...
+        return dto;
+    }
 
-    // Otros métodos
+    @GetMapping
+    public ResponseEntity<List<AreaDTO>> getAllAreas() {
+        List<Area> areas = areaRepository.findAll();
+        List<AreaDTO> areaDTOs = areas.stream().map(AreaController::toDTO).collect(Collectors.toList());
+        return ResponseEntity.ok(areaDTOs);
+    }
 }

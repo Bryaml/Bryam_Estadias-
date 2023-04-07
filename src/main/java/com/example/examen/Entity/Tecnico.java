@@ -2,6 +2,8 @@ package com.example.examen.Entity;
 
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import java.util.List;
 
@@ -26,7 +28,8 @@ public class Tecnico {
 
     @Column(nullable = false)
     private String telefono;
-
+    @Column(nullable = false)
+    private String division;
     @Column(columnDefinition="BLOB")
     private byte[] imagen;
 
@@ -37,7 +40,10 @@ public class Tecnico {
     public void setImagen(byte[] imagen) {
         this.imagen = imagen;
     }
-
+    @OneToMany(mappedBy = "tecnico")
+    @JsonIgnore
+    private List<Mensaje> mensajesEnviados;
+    @JsonIgnore
     public List<Incidencia> getIncidencias() {
         return incidencias;
     }
@@ -52,16 +58,9 @@ public class Tecnico {
     @OneToMany(mappedBy = "tecnico", cascade = CascadeType.ALL)
     private List<Incidencia> incidencias;
 
-    @Column
-    private String tokenRecuperacionContraseña;
 
-    public void setTokenRecuperacionContraseña(String token) {
-        this.tokenRecuperacionContraseña = token;
-    }
 
-    public String getTokenRecuperacionContraseña() {
-        return this.tokenRecuperacionContraseña;
-    }
+
 
 
     public String getRol() {
@@ -73,7 +72,24 @@ public class Tecnico {
     }
 
 
-// getters y setters
+// getters y setters4
+
+
+    public List<Mensaje> getMensajesEnviados() {
+        return mensajesEnviados;
+    }
+
+    public void setMensajesEnviados(List<Mensaje> mensajesEnviados) {
+        this.mensajesEnviados = mensajesEnviados;
+    }
+
+    public String getDivision() {
+        return division;
+    }
+
+    public void setDivision(String division) {
+        this.division = division;
+    }
 
     public Long getId() {
         return id;

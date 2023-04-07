@@ -48,6 +48,7 @@ public class RegistroController {
                 docente.setEmail(form.getEmail());
                 docente.setPassword(form.getPassword());
                 docente.setTelefono(form.getTelefono());
+                docente.setDivision(form.getDivision());
                 docente.setRol(form.getRol());
 
                 docenteRepository.save(docente);
@@ -58,6 +59,7 @@ public class RegistroController {
                 tecnico.setEmail(form.getEmail());
                 tecnico.setPassword(form.getPassword());
                 tecnico.setTelefono(form.getTelefono());
+                tecnico.setDivision(form.getDivision());
                 tecnico.setRol(form.getRol());
 
                 tecnicoRepository.save(tecnico);
@@ -69,20 +71,31 @@ public class RegistroController {
 
             helper.setTo(form.getEmail());
             helper.setSubject("Registro exitoso");
-            helper.setText("Hola " + form.getNombres() + ", acabas de ser registrado. Tus datos de registro son:\n" +
-                    "Nombres: " + form.getNombres() + "\n" +
-                    "Apellidos: " + form.getApellidos() + "\n" +
-                    "Email: " + form.getEmail() + "\n" +
-                    "Password: " + form.getPassword() + "\n" +
-                    "Teléfono: " + form.getTelefono() + "\n" +
-                    "Rol: " + form.getRol());
+
+            String htmlMsg = "<!DOCTYPE html>"+ "<html>" +
+                    "<body style='background-color:black; color:white'>" +
+                    "<h1>Hola " + form.getNombres() + ", acabas de ser registrado.</h1>" +
+                    "<p>Tus datos de registro son:</p>" +
+                    "<ul>" +
+                    "<li>Nombres: " + form.getNombres() + "</li>" +
+                    "<li>Apellidos: " + form.getApellidos() + "</li>" +
+                    "<li>Email: " + form.getEmail() + "</li>" +
+                    "<li>Password: " + form.getPassword() + "</li>" +
+                    "<li>Teléfono: " + form.getTelefono() + "</li>" +
+                    "<li>Rol: " + form.getRol() + "</li>" +
+                    "</ul>" +
+                    "</body>" +
+                    "</html>";
+
+            helper.setText(htmlMsg, true);
+
 
             mailSender.send(message);
 
             return "registro_exitoso";
         } catch (Exception e) {
             e.printStackTrace();
-            return "error";
+            return "error al registrase";
         }
     }
 }

@@ -1,11 +1,20 @@
 package com.example.examen.Entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.List;
 
 @Entity
-public class Area {
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
+public class Area implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,12 +24,15 @@ public class Area {
     private String nombre;
 
 
-    @OneToMany(mappedBy = "area", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "area", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    @JsonIgnore
     private List<Aula> aulas;
 
-    @OneToMany(mappedBy = "area", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "area")
+    @JsonManagedReference
+    @JsonIgnore
     private List<Laboratorio> laboratorios;
-
 
     // Constructor por defecto
     public Area() {}

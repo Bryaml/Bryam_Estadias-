@@ -1,5 +1,9 @@
 package com.example.examen.Entity;
 
+import com.example.examen.dto.DocenteSerializer;
+import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -8,6 +12,9 @@ import java.util.List;
 
 @Entity
 @Table(name = "incidencias")
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
 public class Incidencia {
 
     @Id
@@ -15,20 +22,24 @@ public class Incidencia {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "aula_id")
-    private Aula aula;
-
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "laboratorio_id")
+    @JoinColumn(name = "laboratorio_id", nullable = true)
+    @JsonIgnore
     private Laboratorio laboratorio;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "aula_id", nullable = true)
+    @JsonIgnore
+    private Aula aula;
+    @JsonManagedReference
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "docente_id")
+    @JsonSerialize(using = DocenteSerializer.class)
     private Docente docente;
+    @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "administrador_id")
     private Administrador administrador;
+    @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tecnico_id")
     private Tecnico tecnico;
@@ -47,24 +58,29 @@ public class Incidencia {
 
     @Enumerated(EnumType.STRING)
     private EstadoIncidencia estado;
+
+    @Column(columnDefinition="BLOB")
+    private byte[] imagen;
     //constructors, getters and setters
 
 
     public Incidencia() {
     }
 
-    public Incidencia(Long id, Aula aula, Laboratorio laboratorio, Docente docente, String descripcion, LocalDateTime fechaCreacion, LocalDateTime fechaActiva, LocalDateTime fechaCompletada) {
+    public Incidencia(Long id, Aula aula, Laboratorio laboratorio, Docente docente, Administrador administrador, Tecnico tecnico, String descripcion, LocalDateTime fechaCreacion, LocalDateTime fechaActiva, LocalDateTime fechaCompletada, EstadoIncidencia estado, byte[] imagen) {
         this.id = id;
         this.aula = aula;
         this.laboratorio = laboratorio;
         this.docente = docente;
+        this.administrador = administrador;
+        this.tecnico = tecnico;
         this.descripcion = descripcion;
         this.fechaCreacion = fechaCreacion;
         this.fechaActiva = fechaActiva;
         this.fechaCompletada = fechaCompletada;
+        this.estado = estado;
+        this.imagen = imagen;
     }
-
-
 
     public Administrador getAdministrador() {
         return administrador;

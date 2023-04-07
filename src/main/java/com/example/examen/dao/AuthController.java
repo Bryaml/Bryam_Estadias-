@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.web.bind.annotation.*;
 import com.example.examen.Entity.Administrador;
 import com.example.examen.Entity.Docente;
@@ -20,6 +21,7 @@ import com.example.examen.Repository.DocenteRepository;
 import io.jsonwebtoken.Jwts;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -141,12 +143,22 @@ public class AuthController {
         administradorRepository.save(admin);
 
         // Enviar correo electrónico al usuario con la nueva contraseña
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setFrom(EMAIL_SENDER);
-        mailMessage.setTo(admin.getEmail());
-        mailMessage.setSubject(EMAIL_SUBJECT);
-        mailMessage.setText("Su nueva contraseña es: " + newPassword);
-        mailSender.send(mailMessage);
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        helper.setTo(admin.getEmail());
+        helper.setSubject(EMAIL_SUBJECT);
+        String htmlMsg =
+                "<!DOCTYPE html>"+
+                        "<html>" +
+        "<body style='background-color:black; color:white'>"+
+
+
+                "<h1>Su nueva contraseña es: " + newPassword + "</h1>" +
+                "</body>" +
+                "</html>";
+        helper.setText(htmlMsg, true);
+        mailSender.send(message);
+
     }
 
     private String generarContraseñaAleatoria() {

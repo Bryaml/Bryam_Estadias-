@@ -2,6 +2,8 @@ package com.example.examen.Entity;
 
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import java.util.List;
 
@@ -29,10 +31,12 @@ public class Administrador {
     @Column
     private String rol;
     @OneToMany(mappedBy = "administrador", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Incidencia> incidencias;
     @Column
     private String tokenRecuperacionContraseña;
-    @Column(columnDefinition="BLOB")
+
+    @Column(columnDefinition = "LONGBLOB")
     private byte[] imagen;
     public void setTokenRecuperacionContraseña(String token) {
         this.tokenRecuperacionContraseña = token;

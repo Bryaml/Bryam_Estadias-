@@ -6,7 +6,17 @@ public class RegistroForm {
     private String email;
     private String password;
     private String telefono;
+
+    private String division;
     private String rol;
+
+    public String getDivision() {
+        return division;
+    }
+
+    public void setDivision(String division) {
+        this.division = division;
+    }
 
     public String getNombres() {
         return nombres;

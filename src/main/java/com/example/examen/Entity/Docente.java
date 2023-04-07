@@ -2,6 +2,10 @@ package com.example.examen.Entity;
 
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import javax.persistence.*;
 import java.util.List;
 
@@ -26,21 +30,21 @@ public class Docente {
 
     @Column(nullable = false)
     private String telefono;
+
+    @Column(nullable = false)
+    private String division;
     @Column(columnDefinition="BLOB")
     private byte[] imagen;
+    @JsonBackReference
     @OneToMany(mappedBy = "docente", cascade = CascadeType.ALL)
     private List<Incidencia> incidencias;
+    @OneToMany(mappedBy = "docente")
+    @JsonIgnore
+    private List<Mensaje> mensajesEnviados;
 
-    @Column
-    private String tokenRecuperacionContraseña;
 
-    public void setTokenRecuperacionContraseña(String token) {
-        this.tokenRecuperacionContraseña = token;
-    }
 
-    public String getTokenRecuperacionContraseña() {
-        return this.tokenRecuperacionContraseña;
-    }
+
 
     public byte[] getImagen() {
         return imagen;
@@ -49,6 +53,7 @@ public class Docente {
     public void setImagen(byte[] imagen) {
         this.imagen = imagen;
     }
+
 
     public String getRol() {
         return rol;
@@ -65,6 +70,31 @@ public class Docente {
 
 
     // getters y setters
+
+    public String getDivision() {
+        return division;
+    }
+
+    public void setDivision(String division) {
+        this.division = division;
+    }
+
+    public List<Incidencia> getIncidencias() {
+        return incidencias;
+    }
+
+    public void setIncidencias(List<Incidencia> incidencias) {
+        this.incidencias = incidencias;
+    }
+
+    public List<Mensaje> getMensajesEnviados() {
+        return mensajesEnviados;
+    }
+
+    public void setMensajesEnviados(List<Mensaje> mensajesEnviados) {
+        this.mensajesEnviados = mensajesEnviados;
+    }
+
     public Long getId() {
         return id;
     }

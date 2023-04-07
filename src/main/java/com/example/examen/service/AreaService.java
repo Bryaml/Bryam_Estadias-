@@ -44,5 +44,5 @@ public class AreaService {
         laboratorioRepository.saveAll(laboratorios);
     }
 
-    // Otros métodos
+
 }

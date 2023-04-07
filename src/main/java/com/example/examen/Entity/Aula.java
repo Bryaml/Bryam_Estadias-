@@ -1,13 +1,20 @@
 package com.example.examen.Entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.example.examen.dto.AreaSerializer;
+import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.List;
 
 
 @Entity
-public class Aula {
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
+
+public class Aula implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,11 +27,10 @@ public class Aula {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "area_id", nullable = false)
-    @JsonIgnoreProperties("aulas")
+    @JsonSerialize(using = AreaSerializer.class)
+    @JsonIgnore
     private Area area;
 
-    @OneToMany(mappedBy = "aula", cascade = CascadeType.ALL)
-    private List<Incidencia> incidencias;
 
     // Constructor por defecto
     public Aula() {}
@@ -37,12 +43,6 @@ public class Aula {
     }
 
     // Constructor con parámetros con lista de incidencias
-    public Aula(String nombre, int capacidad, Area area, List<Incidencia> incidencias) {
-        this.nombre = nombre;
-        this.capacidad = capacidad;
-        this.area = area;
-        this.incidencias = incidencias;
-    }
 
 
 
@@ -74,15 +74,5 @@ public class Aula {
         this.area = area;
     }
 
-    public List<Incidencia> getIncidencias() {
-        return incidencias;
-    }
 
-    public void setIncidencias(List<Incidencia> incidencias) {
-        this.incidencias = incidencias;
-    }
-
-    public int getNumeroIncidencias() {
-        return incidencias.size();
-    }
 }

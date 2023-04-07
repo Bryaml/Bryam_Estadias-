@@ -1,10 +1,18 @@
 package com.example.examen.Entity;
 
+import com.example.examen.dto.AreaSerializer;
+import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.List;
 
 @Entity
-public class Laboratorio {
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
+public class Laboratorio implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -15,12 +23,16 @@ public class Laboratorio {
     @Column(nullable = false)
     private int capacidad;
 
+
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "area_id", nullable = false)
+    @JsonSerialize(using = AreaSerializer.class)
+    @JsonIgnore
     private Area area;
 
-
     @OneToMany(mappedBy = "laboratorio", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Incidencia> incidencias;
 
     // Constructor por defecto

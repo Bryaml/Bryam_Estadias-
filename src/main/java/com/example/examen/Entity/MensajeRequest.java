@@ -7,21 +7,28 @@ public class MensajeRequest {
     private Long docenteId;
     private Long tecnicoId;
     private String contenido;
+    private boolean esTecnico;
 
-    // Getters y setters
-
-    public MensajeRequest() {
+    public boolean isEsTecnico() {
+        return esTecnico;
     }
 
-    public MensajeRequest(Long docenteId, Long tecnicoId, String contenido) {
+    public boolean getEsTecnico() {
+        return esTecnico;
+    }
+
+    public void setEsTecnico(boolean esTecnico) {
+        this.esTecnico = esTecnico;
+    }
+
+    public MensajeRequest(Long docenteId, Long tecnicoId, String contenido, boolean esTecnico) {
         this.docenteId = docenteId;
         this.tecnicoId = tecnicoId;
         this.contenido = contenido;
+        this.esTecnico = esTecnico;
     }
 
-
-
-    // Getters y setters
+// Getters y setters
 
 
     public Long getDocenteId() {

@@ -34,5 +34,6 @@ public interface IncidenciaRepository extends JpaRepository<Incidencia, Long> {
 
     @Query("SELECT DISTINCT i.tecnico FROM Incidencia i WHERE i.docente.id = :docenteId AND i.estado = :estado")
     List<Tecnico> findDistinctTecnicosByDocenteIdAndEstado(@Param("docenteId") Long docenteId, @Param("estado") EstadoIncidencia estado);
-
+    @Query("SELECT DISTINCT i.docente FROM Incidencia i WHERE i.tecnico.id = :tecnicoId AND i.estado = :estado")
+    List<Docente> findDistinctDocentesByTecnicoIdAndEstado(@Param("tecnicoId") Long tecnicoId, @Param("estado") EstadoIncidencia estado);
 }

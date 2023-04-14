@@ -24,7 +24,17 @@ public class Mensaje {
     @Column
     private LocalDateTime fechaEnvio;
 
-    // Getters y setters
+    @Column
+    private boolean esTecnico;
+
+    public boolean getEsTecnico() {
+        return esTecnico;
+    }
+
+    public void setEsTecnico(boolean esTecnico) {
+        this.esTecnico = esTecnico;
+    }
+// Getters y setters
 
 
     public Mensaje() {
@@ -76,5 +86,8 @@ public class Mensaje {
 
     public void setFechaEnvio(LocalDateTime fechaEnvio) {
         this.fechaEnvio = fechaEnvio;
+    }
+
+    public void setTecnicoId(Long id) {
     }
 }

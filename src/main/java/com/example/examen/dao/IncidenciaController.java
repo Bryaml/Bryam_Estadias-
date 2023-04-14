@@ -120,7 +120,10 @@ public class IncidenciaController {
             // Enviar notificación al docente
             // Enviar notificación al docente
             System.out.println("Enviando notificación al docente: " + incidencia.getDocente().getEmail()); // Agrega este registro
-            template.convertAndSendToUser(incidencia.getDocente().getEmail(), "/topic/notifications", "Un técnico ha sido asignado a tu incidencia");
+            template.convertAndSendToUser(incidencia.getDocente().getEmail(), "/queue/notifications", "Un técnico ha sido asignado a tu incidencia");
+
+
+
             System.out.println("Notificación enviada al docente: " + incidencia.getDocente().getEmail());
             return ResponseEntity.ok(incidencia);
         } catch (Exception e) {
@@ -188,7 +191,15 @@ public class IncidenciaController {
         return ResponseEntity.ok(tecnicos);
     }
 
+    @GetMapping("/tecnico/{tecnicoId}/docentes")
+    public ResponseEntity<List<Docente>> getDocentesWithActiveIncidencia(@PathVariable Long tecnicoId) {
+        Tecnico tecnico = tecnicoRepository.findById(tecnicoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Técnico no encontrado"));
 
+        List<Docente> docentes = incidenciaRepository.findDistinctDocentesByTecnicoIdAndEstado(tecnicoId, EstadoIncidencia.ACTIVA);
+
+        return ResponseEntity.ok(docentes);
+    }
     @GetMapping
     public ResponseEntity<List<Incidencia>> getAllIncidencias(
             @RequestParam(required = false) EstadoIncidencia estado,

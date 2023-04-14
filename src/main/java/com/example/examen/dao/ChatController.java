@@ -35,7 +35,7 @@ public class ChatController {
     @MessageMapping("/chat/enviar-mensaje")
     public void enviarMensaje(MensajeRequest mensajeRequest) {
         try {
-            System.out.println("MensajeRequest: " + mensajeRequest); // Añade esta línea
+            System.out.println("MensajeRequest: " + mensajeRequest);
 
             Docente docente = docenteRepository.findById(mensajeRequest.getDocenteId())
                     .orElseThrow(() -> new ResourceNotFoundException("Docente no encontrado"));
@@ -50,7 +50,7 @@ public class ChatController {
                 throw new IllegalStateException("No hay una incidencia activa entre el docente y el técnico");
             }
 
-            Incidencia incidenciaActiva = incidenciasActivas.get(0); // Utiliza la primera incidencia activa en la lista
+            Incidencia incidenciaActiva = incidenciasActivas.get(0);
 
             Mensaje mensaje = new Mensaje();
             mensaje.setDocente(docente);
@@ -59,13 +59,18 @@ public class ChatController {
             mensaje.setFechaEnvio(LocalDateTime.now());
 
             Mensaje mensajeGuardado = mensajeRepository.save(mensaje);
+            mensajeGuardado.setEsTecnico(mensajeRequest.getEsTecnico());
 
             String chatId = String.format("chat_%d_%d", docente.getId(), tecnico.getId());
             template.convertAndSend("/topic/chat/" + chatId, mensajeGuardado);
 
+            // Enviar notificación al receptor
+            String notificationDestination = String.format("/notifications/%d", mensajeRequest.getEsTecnico() ? docente.getId() : tecnico.getId());
+            template.convertAndSend(notificationDestination, "¡Nuevo mensaje!");
+
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Excepción: " + e.getMessage()); // Añade esta línea
+            System.out.println("Excepción: " + e.getMessage());
             throw new RuntimeException("Error al enviar el mensaje");
         }
     }
@@ -87,5 +92,10 @@ public class ChatController {
         return ResponseEntity.ok(conversations);
     }
 
+    @GetMapping("/api/tecnico/{tecnicoId}/docentes")
+    public ResponseEntity<List<Docente>> getDocentesByTecnicoId(@PathVariable Long tecnicoId) {
+        List<Docente> docentes = mensajeRepository.findDocentesByTecnicoId(tecnicoId);
+        return ResponseEntity.ok(docentes);
+    }
 
 }
